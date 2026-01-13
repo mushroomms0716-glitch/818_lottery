@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>818 抽獎活動</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .sections {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .emoji {
+            font-size: 1.5rem;
+        }
+
+        /* 抽獎區域 */
+        .lottery-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .current-draw {
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .current-draw .label {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .current-draw .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3748;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-draw .value.highlight {
+            color: #e53e3e;
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .btn {
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(56, 178, 172, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #c53030;
+        }
+
+        /* 狀態顯示 */
+        .status {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .status-item {
+            background: #edf2f7;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .status-item.active {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .status-item.done {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        /* 結果列表 */
+        .results-section {
+            margin-top: 20px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .results-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .results-table .money {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        /* 剩餘池 */
+        .pool-section {
+            margin-top: 20px;
+        }
+
+        .pool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .pool-title {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .btn-small {
+            background: #a0aec0;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-small:hover {
+            background: #718096;
+        }
+
+        .pool-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pool-item {
+            background: #edf2f7;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .pool-item.used {
+            background: #fed7d7;
+            color: #c53030;
+            text-decoration: line-through;
+        }
+
+        /* 主抽獎流程指示 */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            background: #e2e8f0;
+            color: #718096;
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .step.done {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        /* 加碼區獨立結果 */
+        .bonus-results {
+            margin-top: 15px;
+        }
+
+        .bonus-result-item {
+            padding: 10px;
+            background: #f0fff4;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bonus-result-item .order {
+            background: #38a169;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .bonus-result-item .name {
+            font-weight: bold;
+            color: #276749;
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #a0aec0;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎉 818 抽獎活動 🎉</h1>
+
+        <div class="sections">
+            <!-- 主抽獎區 -->
+            <div class="card">
+                <h2><span class="emoji">🎰</span> 主抽獎</h2>
+
+                <div class="step-indicator">
+                    <span class="step" id="step1">1. 抽人名</span>
+                    <span class="step" id="step2">2. 抽獎品</span>
+                    <span class="step" id="step3">3. 抽獎金</span>
+                </div>
+
+                <div class="lottery-section">
+                    <div class="current-draw">
+                        <div class="label">目前抽出</div>
+                        <div class="value" id="mainResult">等待抽獎...</div>
+                    </div>
+
+                    <button class="btn btn-primary" id="mainDrawBtn" onclick="mainDraw()">
+                        🎲 開始抽獎
+                    </button>
+
+                    <div class="status">
+                        <span class="status-item" id="statusPeople">剩餘人數: 9</span>
+                        <span class="status-item" id="statusPrize">剩餘獎品: 9</span>
+                        <span class="status-item" id="statusMoney">剩餘獎金: 9</span>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-danger" onclick="resetMain()">🔄 重置主抽獎</button>
+                </div>
+            </div>
+
+            <!-- 加碼抽獎區 -->
+            <div class="card">
+                <h2><span class="emoji">🌟</span> 加碼活動（抽人名）</h2>
+
+                <div class="lottery-section">
+                    <div class="current-draw">
+                        <div class="label">抽出人員</div>
+                        <div class="value" id="bonusResult">等待抽獎...</div>
+                    </div>
+
+                    <button class="btn btn-secondary" id="bonusDrawBtn" onclick="bonusDraw()">
+                        ⭐ 抽一位幸運兒
+                    </button>
+
+                    <div class="status">
+                        <span class="status-item" id="bonusStatus">剩餘人數: 9</span>
+                    </div>
+                </div>
+
+                <div class="bonus-results" id="bonusResultsList">
+                    <div class="empty-state">尚無抽獎結果</div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-danger" onclick="resetBonus()">🔄 重置加碼抽獎</button>
+                </div>
+            </div>
+
+            <!-- 主抽獎結果 -->
+            <div class="card full-width">
+                <h2 style="justify-content: space-between;">
+                    <span><span class="emoji">📋</span> 主抽獎結果紀錄</span>
+                    <button class="btn btn-danger" onclick="resetMain()"
+                        style="font-size: 0.8rem; padding: 8px 16px;">🔄 重置全部</button>
+                </h2>
+
+                <div id="mainResultsArea">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>順序</th>
+                                <th>姓名</th>
+                                <th>獎品</th>
+                                <th>獎金</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mainResultsBody">
+                            <tr>
+                                <td colspan="4" class="empty-state">尚無抽獎結果</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pool-section">
+                    <div class="pool-header">
+                        <div class="pool-title">👥 人名池</div>
+                        <button class="btn-small" onclick="resetPeoplePool()">重置</button>
+                    </div>
+                    <div class="pool-items" id="peoplePool"></div>
+                </div>
+                <div class="pool-section">
+                    <div class="pool-header">
+                        <div class="pool-title">🎁 獎品池</div>
+                        <button class="btn-small" onclick="resetPrizePool()">重置</button>
+                    </div>
+                    <div class="pool-items" id="prizePool"></div>
+                </div>
+                <div class="pool-section">
+                    <div class="pool-header">
+                        <div class="pool-title">💰 獎金池</div>
+                        <button class="btn-small" onclick="resetMoneyPool()">重置</button>
+                    </div>
+                    <div class="pool-items" id="moneyPool"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 初始資料 =====
+        const INITIAL_PEOPLE = ['淑雅', '麗萍', '小逸', '加昌', '馬要', '小高', '主廚', '店長', '睿睿'];
+        const INITIAL_PRIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+        const INITIAL_MONEY = [5000, 3000, 2000, 1000, 1000, 1000, 1000, 1000, 1000];
+
+        // ===== 主抽獎狀態 =====
+        let mainPeople = [...INITIAL_PEOPLE];
+        let mainPrizes = [...INITIAL_PRIZES];
+        let mainMoney = [...INITIAL_MONEY];
+        let mainResults = [];
+        let mainStep = 1; // 1: 抽人, 2: 抽獎品, 3: 抽獎金
+        let currentPerson = null;
+        let currentPrize = null;
+
+        // ===== 加碼抽獎狀態 =====
+        let bonusPeople = [...INITIAL_PEOPLE];
+        let bonusResults = [];
+
+        // ===== 初始化 =====
+        function init() {
+            updatePools();
+            updateStatus();
+            updateStepIndicator();
+        }
+
+        // ===== 主抽獎邏輯 =====
+        function mainDraw() {
+            const resultEl = document.getElementById('mainResult');
+            const btnEl = document.getElementById('mainDrawBtn');
+
+            if (mainStep === 1) {
+                // 抽人名
+                if (mainPeople.length === 0) {
+                    alert('所有人都已抽完！');
+                    return;
+                }
+                const idx = Math.floor(Math.random() * mainPeople.length);
+                currentPerson = mainPeople.splice(idx, 1)[0];
+                resultEl.textContent = `👤 ${currentPerson}`;
+                resultEl.classList.add('highlight');
+                setTimeout(() => resultEl.classList.remove('highlight'), 500);
+
+                mainStep = 2;
+                btnEl.textContent = '🎁 抽獎品';
+
+            } else if (mainStep === 2) {
+                // 抽獎品
+                const idx = Math.floor(Math.random() * mainPrizes.length);
+                currentPrize = mainPrizes.splice(idx, 1)[0];
+                resultEl.textContent = `👤 ${currentPerson} → 🎁 獎品 ${currentPrize}`;
+                resultEl.classList.add('highlight');
+                setTimeout(() => resultEl.classList.remove('highlight'), 500);
+
+                mainStep = 3;
+                btnEl.textContent = '💰 抽獎金';
+
+            } else if (mainStep === 3) {
+                // 抽獎金
+                const idx = Math.floor(Math.random() * mainMoney.length);
+                const money = mainMoney.splice(idx, 1)[0];
+                resultEl.textContent = `👤 ${currentPerson} → 🎁 ${currentPrize} → 💰 $${money.toLocaleString()}`;
+                resultEl.classList.add('highlight');
+                setTimeout(() => resultEl.classList.remove('highlight'), 500);
+
+                // 記錄結果
+                mainResults.push({
+                    person: currentPerson,
+                    prize: currentPrize,
+                    money: money
+                });
+
+                // 重置步驟
+                mainStep = 1;
+                currentPerson = null;
+                currentPrize = null;
+
+                if (mainPeople.length > 0) {
+                    btnEl.textContent = '🎲 繼續抽獎';
+                } else {
+                    btnEl.textContent = '✅ 抽獎完成';
+                    btnEl.disabled = true;
+                }
+
+                updateMainResults();
+            }
+
+            updatePools();
+            updateStatus();
+            updateStepIndicator();
+        }
+
+        // ===== 加碼抽獎邏輯 =====
+        function bonusDraw() {
+            if (bonusPeople.length === 0) {
+                alert('加碼抽獎的人員已全部抽完！');
+                return;
+            }
+
+            const resultEl = document.getElementById('bonusResult');
+            const btnEl = document.getElementById('bonusDrawBtn');
+
+            const idx = Math.floor(Math.random() * bonusPeople.length);
+            const person = bonusPeople.splice(idx, 1)[0];
+
+            resultEl.textContent = `⭐ ${person}`;
+            resultEl.classList.add('highlight');
+            setTimeout(() => resultEl.classList.remove('highlight'), 500);
+
+            bonusResults.push(person);
+            updateBonusResults();
+            updateBonusStatus();
+
+            if (bonusPeople.length === 0) {
+                btnEl.textContent = '✅ 抽獎完成';
+                btnEl.disabled = true;
+            }
+        }
+
+        // ===== 更新顯示 =====
+        function updatePools() {
+            // 人名池
+            const peoplePoolEl = document.getElementById('peoplePool');
+            peoplePoolEl.innerHTML = INITIAL_PEOPLE.map(p => {
+                const used = !mainPeople.includes(p);
+                return `<span class="pool-item ${used ? 'used' : ''}">${p}</span>`;
+            }).join('');
+
+            // 獎品池
+            const prizePoolEl = document.getElementById('prizePool');
+            prizePoolEl.innerHTML = INITIAL_PRIZES.map(p => {
+                const used = !mainPrizes.includes(p);
+                return `<span class="pool-item ${used ? 'used' : ''}">${p}</span>`;
+            }).join('');
+
+            // 獎金池
+            const moneyPoolEl = document.getElementById('moneyPool');
+            const usedMoney = [...INITIAL_MONEY];
+            mainMoney.forEach(m => {
+                const idx = usedMoney.indexOf(m);
+                if (idx > -1) usedMoney[idx] = null;
+            });
+            moneyPoolEl.innerHTML = INITIAL_MONEY.map((m, i) => {
+                const used = usedMoney[i] !== null;
+                return `<span class="pool-item ${used ? 'used' : ''}">$${m.toLocaleString()}</span>`;
+            }).join('');
+        }
+
+        function updateStatus() {
+            document.getElementById('statusPeople').textContent = `剩餘人數: ${mainPeople.length}`;
+            document.getElementById('statusPrize').textContent = `剩餘獎品: ${mainPrizes.length}`;
+            document.getElementById('statusMoney').textContent = `剩餘獎金: ${mainMoney.length}`;
+        }
+
+        function updateBonusStatus() {
+            document.getElementById('bonusStatus').textContent = `剩餘人數: ${bonusPeople.length}`;
+        }
+
+        function updateStepIndicator() {
+            const steps = ['step1', 'step2', 'step3'];
+            steps.forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.className = 'step';
+                if (i + 1 < mainStep) {
+                    el.classList.add('done');
+                } else if (i + 1 === mainStep) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        function updateMainResults() {
+            const tbody = document.getElementById('mainResultsBody');
+            if (mainResults.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">尚無抽獎結果</td></tr>';
+                return;
+            }
+            tbody.innerHTML = mainResults.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${r.person}</td>
+                    <td>獎品 ${r.prize}</td>
+                    <td class="money">$${r.money.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateBonusResults() {
+            const container = document.getElementById('bonusResultsList');
+            if (bonusResults.length === 0) {
+                container.innerHTML = '<div class="empty-state">尚無抽獎結果</div>';
+                return;
+            }
+            container.innerHTML = bonusResults.map((name, i) => `
+                <div class="bonus-result-item">
+                    <span class="order">${i + 1}</span>
+                    <span class="name">${name}</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== 重置功能 =====
+        function resetMain() {
+            if (!confirm('確定要重置主抽獎嗎？所有紀錄將被清除！')) return;
+
+            mainPeople = [...INITIAL_PEOPLE];
+            mainPrizes = [...INITIAL_PRIZES];
+            mainMoney = [...INITIAL_MONEY];
+            mainResults = [];
+            mainStep = 1;
+            currentPerson = null;
+            currentPrize = null;
+
+            document.getElementById('mainResult').textContent = '等待抽獎...';
+            document.getElementById('mainDrawBtn').textContent = '🎲 開始抽獎';
+            document.getElementById('mainDrawBtn').disabled = false;
+
+            updatePools();
+            updateStatus();
+            updateStepIndicator();
+            updateMainResults();
+        }
+
+        function resetBonus() {
+            if (!confirm('確定要重置加碼抽獎嗎？所有紀錄將被清除！')) return;
+
+            bonusPeople = [...INITIAL_PEOPLE];
+            bonusResults = [];
+
+            document.getElementById('bonusResult').textContent = '等待抽獎...';
+            document.getElementById('bonusDrawBtn').textContent = '⭐ 抽一位幸運兒';
+            document.getElementById('bonusDrawBtn').disabled = false;
+
+            updateBonusStatus();
+            updateBonusResults();
+        }
+
+        // ===== 個別池子重置 =====
+        function resetPeoplePool() {
+            if (!confirm('確定要重置人名池嗎？')) return;
+            mainPeople = [...INITIAL_PEOPLE];
+            mainStep = 1;
+            currentPerson = null;
+            currentPrize = null;
+            document.getElementById('mainResult').textContent = '等待抽獎...';
+            document.getElementById('mainDrawBtn').textContent = '🎲 開始抽獎';
+            document.getElementById('mainDrawBtn').disabled = false;
+            updatePools();
+            updateStatus();
+            updateStepIndicator();
+        }
+
+        function resetPrizePool() {
+            if (!confirm('確定要重置獎品池嗎？')) return;
+            mainPrizes = [...INITIAL_PRIZES];
+            updatePools();
+            updateStatus();
+        }
+
+        function resetMoneyPool() {
+            if (!confirm('確定要重置獎金池嗎？')) return;
+            mainMoney = [...INITIAL_MONEY];
+            updatePools();
+            updateStatus();
+        }
+
+        // 啟動
+        init();
+    </script>
+</body>
+
+</html>
