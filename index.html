@@ -481,7 +481,7 @@
 
     <script>
         // ===== 初始資料 =====
-        const INITIAL_PEOPLE = ['淑雅', '麗萍', '小逸', '加昌', '馬要', '小高', '主廚', '店長', '睿睿'];
+        const INITIAL_PEOPLE = ['淑雅', '麗萍', '小逸', '加昌', '馬要', '小高', '睿睿', '主廚', '店長'];
         const INITIAL_PRIZES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
         const INITIAL_MONEY = [5000, 3000, 2000, 1000, 1000, 1000, 1000, 1000, 1000];
 
@@ -495,7 +495,8 @@
         let currentPrize = null;
 
         // ===== 加碼抽獎狀態 =====
-        let bonusPeople = [...INITIAL_PEOPLE];
+        const BONUS_INITIAL_PEOPLE = ['淑雅', '麗萍', '小逸', '加昌', '馬要', '小高', '睿睿'];
+        let bonusPeople = [...BONUS_INITIAL_PEOPLE];
         let bonusResults = [];
 
         // ===== 初始化 =====
@@ -705,7 +706,7 @@
         function resetBonus() {
             if (!confirm('確定要重置加碼抽獎嗎？所有紀錄將被清除！')) return;
 
-            bonusPeople = [...INITIAL_PEOPLE];
+            bonusPeople = [...BONUS_INITIAL_PEOPLE];
             bonusResults = [];
 
             document.getElementById('bonusResult').textContent = '等待抽獎...';
